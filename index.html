@@ -3,123 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業財務支出管理系統 - 修正版</title>
+    <title>支出管理系統 - 數據精確版</title>
     <style>
         :root {
             --primary: #4338ca;
             --secondary: #64748b;
             --success: #059669;
             --danger: #dc2626;
-            --info: #0ea5e9;
-            --bg: #f1f5f9;
+            --bg: #f8fafc;
         }
 
-        body {
-            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-            background-color: var(--bg);
-            margin: 0;
-            padding: 20px;
-            color: #1e293b;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        }
-
-        h1 { text-align: center; color: var(--primary); margin-bottom: 25px; }
-        h2 { font-size: 1.1rem; border-left: 4px solid var(--primary); padding-left: 10px; margin: 20px 0 10px 0; }
-
-        /* 輸入區域 */
-        .input-card {
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1.2fr 1.2fr auto;
-            gap: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-        }
-
-        input, select {
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 0.95rem;
-        }
-
-        button {
-            padding: 10px 15px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
+        body { font-family: sans-serif; background: var(--bg); padding: 20px; color: #1e293b; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); }
+        
+        .input-card { background: #f1f5f9; padding: 20px; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 20px; }
+        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; }
+        
+        button { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; }
         .btn-add { background: var(--primary); color: white; }
         .btn-export { background: var(--success); color: white; }
-        .btn-import { background: var(--info); color: white; }
-        .btn-clear { background: var(--secondary); color: white; font-size: 12px; margin-left: 10px; }
+        .btn-import { background: #0ea5e9; color: white; }
 
-        .toolbar {
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .toolbar { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
+        .search-input { flex-grow: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; }
 
-        .search-input {
-            flex-grow: 1;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            max-width: 400px;
-        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f1f5f9; text-align: left; padding: 12px; border-bottom: 2px solid #cbd5e1; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
 
-        .action-btns { display: flex; gap: 10px; }
-
-        /* 表格樣式 */
-        .table-container { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { background: #f8fafc; text-align: left; padding: 12px; border-bottom: 2px solid #e2e8f0; color: var(--secondary); }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
-
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-        .category-貸款 { background: #fee2e2; color: #b91c1c; }
-        .category-卡費 { background: #fef3c7; color: #92400e; }
-        .category-保險 { background: #dcfce7; color: #15803d; }
-        .category-生活費 { background: #dbeafe; color: #1e40af; }
-
-        /* 統計區塊 */
-        .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 25px; }
-        .summary-box { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; }
-        .sum-val { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .summary-box { background: white; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; }
+        
+        .total-row { border-top: 2px solid var(--primary); margin-top: 10px; padding-top: 10px; font-weight: bold; color: var(--primary); }
+        .badge { padding: 3px 7px; border-radius: 4px; font-size: 12px; background: #e2e8f0; }
 
         #fileInput { display: none; }
-
-        @media (max-width: 800px) {
-            .input-card { grid-template-columns: 1fr; }
-            .summary-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 768px) { .input-card, .summary-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📊 專業支出管理系統 (修正版)</h1>
+    <h1>📊 每月支出管理 (精確計得版)</h1>
 
     <!-- 輸入區 -->
     <div class="input-card">
@@ -130,33 +57,29 @@
             <option value="生活費">🥗 生活費</option>
             <option value="其他">📦 其他</option>
         </select>
-        <input type="text" id="desc" placeholder="項目名稱">
+        <input type="text" id="desc" placeholder="支出項目">
         <input type="number" id="amount" placeholder="金額">
         <input type="date" id="dueDate">
-        <button class="btn-add" onclick="addItem()">新增紀錄</button>
+        <button class="btn-add" onclick="addItem()">新增</button>
     </div>
 
     <!-- 工具列 -->
     <div class="toolbar">
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋名稱或類別..." oninput="renderAll()">
-        
-        <div class="action-btns">
-            <button class="btn-import" onclick="document.getElementById('fileInput').click()">📂 匯入備份</button>
-            <input type="file" id="fileInput" accept=".csv" onchange="importCSV(event)">
-            <button class="btn-export" onclick="exportToCSV()">💾 匯出備份</button>
-        </div>
+        <button class="btn-import" onclick="document.getElementById('fileInput').click()">匯入 CSV</button>
+        <input type="file" id="fileInput" accept=".csv" onchange="importCSV(event)">
+        <button class="btn-export" onclick="exportToCSV()">匯出 CSV</button>
     </div>
 
-    <!-- 清單表格 -->
-    <div class="table-container">
-        <h2>📝 支出明細 <button class="btn-clear" onclick="clearAllData()">全部清空</button></h2>
+    <!-- 表格 -->
+    <div style="overflow-x: auto;">
         <table>
             <thead>
                 <tr>
                     <th>類別</th>
-                    <th>明細名稱</th>
-                    <th style="text-align: right;">應繳金額</th>
-                    <th>繳款期限</th>
+                    <th>名稱</th>
+                    <th style="text-align: right;">金額</th>
+                    <th>期限</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -164,31 +87,38 @@
         </table>
     </div>
 
-    <!-- 統計區 -->
+    <!-- 統計報表 -->
     <div class="summary-grid">
+        <!-- 類別統計 -->
         <div class="summary-box">
-            <h2>按類別累計 (總額)</h2>
+            <h3>📂 類別累計總額</h3>
             <div id="categorySummary"></div>
+            <div id="categoryVerify" class="total-row"></div>
         </div>
+
+        <!-- 月份統計 -->
         <div class="summary-box">
-            <h2>月度總計 (最近五個月)</h2>
+            <h3>📅 月度累計</h3>
             <div id="monthlySummary"></div>
         </div>
+
+        <!-- 年度統計 -->
         <div class="summary-box">
-            <h2>年度累計</h2>
+            <h3>年度累計</h3>
             <div id="yearlySummary"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // 資料初始化，確保從 localStorage 取出的金額也是數字型態
-    let expenses = (JSON.parse(localStorage.getItem('my_expense_v4')) || []).map(item => ({
+    // 1. 初始化資料並強制清洗 (確保全部都是數字且無空格)
+    let expenses = (JSON.parse(localStorage.getItem('expense_v5')) || []).map(item => ({
         ...item,
-        amount: parseFloat(item.amount) || 0
+        category: String(item.category).trim(),
+        amount: Number(item.amount) || 0,
+        desc: String(item.desc).trim()
     }));
 
-    // 初始化渲染
     renderAll();
 
     function renderAll() {
@@ -196,134 +126,124 @@
         renderSummaries();
     }
 
+    // 2. 新增項目
     function addItem() {
-        const category = document.getElementById('category').value;
-        const desc = document.getElementById('desc').value;
-        const amountVal = document.getElementById('amount').value;
-        const dueDate = document.getElementById('dueDate').value;
+        const cat = document.getElementById('category').value;
+        const desc = document.getElementById('desc').value.trim();
+        const amt = document.getElementById('amount').value;
+        const date = document.getElementById('dueDate').value;
 
-        if (!desc || !amountVal || !dueDate) {
-            alert('請完整填寫');
-            return;
-        }
+        if (!desc || !amt || !date) return alert('請填寫完整資訊');
 
         const item = {
-            id: Date.now() + Math.random(),
-            category,
-            desc,
-            amount: parseFloat(amountVal), // 強制轉為浮點數
-            date: dueDate,
-            year: dueDate.substring(0, 4),
-            month: dueDate.substring(0, 7)
+            id: Date.now(),
+            category: cat,
+            desc: desc,
+            amount: Number(amt), // 強制數字型態
+            date: date,
+            year: date.substring(0, 4),
+            month: date.substring(0, 7)
         };
 
         expenses.push(item);
-        saveData();
-        renderAll();
+        saveAndRefresh();
         document.getElementById('desc').value = '';
         document.getElementById('amount').value = '';
     }
 
-    function deleteItem(id) {
-        if(confirm('確定刪除？')) {
-            expenses = expenses.filter(e => e.id !== id);
-            saveData();
-            renderAll();
-        }
+    // 3. 核心統計邏輯 (修正加總錯誤)
+    function renderSummaries() {
+        const catMap = {};
+        const monMap = {};
+        const yearMap = {};
+        let grandTotal = 0;
+
+        expenses.forEach(item => {
+            const val = Number(item.amount) || 0;
+            const cat = item.category.trim();
+            const mon = item.month;
+            const year = item.year;
+
+            // 類別加總
+            catMap[cat] = (catMap[cat] || 0) + val;
+            // 月份加總
+            monMap[mon] = (monMap[mon] || 0) + val;
+            // 年度加總
+            yearMap[year] = (yearMap[year] || 0) + val;
+            // 總驗證額
+            grandTotal += val;
+        });
+
+        // 渲染類別累計
+        let catHtml = '';
+        Object.keys(catMap).sort().forEach(cat => {
+            catHtml += `<div class="summary-item"><span>${cat}</span><b>$${catMap[cat].toLocaleString()}</b></div>`;
+        });
+        document.getElementById('categorySummary').innerHTML = catHtml || '無數據';
+        document.getElementById('categoryVerify').innerHTML = `<span>上述總計：</span><span>$${grandTotal.toLocaleString()}</span>`;
+
+        // 渲染月份累計
+        let monHtml = '';
+        Object.keys(monMap).sort().reverse().slice(0, 5).forEach(m => {
+            monHtml += `<div class="summary-item"><span>${m}</span><b>$${monMap[m].toLocaleString()}</b></div>`;
+        });
+        document.getElementById('monthlySummary').innerHTML = monHtml || '無數據';
+
+        // 渲染年度累計
+        let yearHtml = '';
+        Object.keys(yearMap).sort().reverse().forEach(y => {
+            yearHtml += `<div class="summary-item" style="color:var(--primary); font-weight:bold;"><span>${y} 年度</span><span>$${yearMap[y].toLocaleString()}</span></div>`;
+        });
+        document.getElementById('yearlySummary').innerHTML = yearHtml || '無數據';
     }
 
-    function clearAllData() {
-        if(confirm('警告！這將刪除所有紀錄，確定嗎？')) {
-            expenses = [];
-            saveData();
-            renderAll();
-        }
-    }
-
-    function saveData() {
-        localStorage.setItem('my_expense_v4', JSON.stringify(expenses));
-    }
-
+    // 4. 渲染明細清單 (支援搜尋)
     function renderTable() {
-        const list = document.getElementById('expenseList');
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        list.innerHTML = '';
+        const tbody = document.getElementById('expenseList');
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        tbody.innerHTML = '';
 
-        const filtered = expenses.filter(item => 
-            item.desc.toLowerCase().includes(searchTerm) || 
-            item.category.toLowerCase().includes(searchTerm)
+        const filtered = expenses.filter(i => 
+            i.desc.toLowerCase().includes(search) || i.category.toLowerCase().includes(search)
         ).sort((a, b) => new Date(b.date) - new Date(a.date));
 
         filtered.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><span class="badge category-${item.category}">${item.category}</span></td>
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="badge">${item.category}</span></td>
                 <td>${item.desc}</td>
-                <td style="text-align: right; font-weight: bold;">$${item.amount.toLocaleString()}</td>
+                <td style="text-align: right; font-weight: bold;">$${Number(item.amount).toLocaleString()}</td>
                 <td>${item.date}</td>
-                <td><button onclick="deleteItem(${item.id})" style="color:var(--danger); background:none; border:1px solid var(--danger); padding:2px 5px; font-size:12px;">刪除</button></td>
+                <td><button onclick="deleteItem(${item.id})" style="color:var(--danger); background:none; border:1px solid var(--danger); padding:2px 5px;">刪除</button></td>
             `;
-            list.appendChild(row);
+            tbody.appendChild(tr);
         });
     }
 
-    // 重點修正：統計邏輯
-    function renderSummaries() {
-        const catMap = {}, monMap = {}, yearMap = {};
-        
-        // 使用原始 expenses 陣列進行全局統計
-        expenses.forEach(e => {
-            const amt = parseFloat(e.amount) || 0; // 再次確保參與加總的是數字
-            
-            // 類別累計
-            catMap[e.category] = (catMap[e.category] || 0) + amt;
-            
-            // 月份累計
-            monMap[e.month] = (monMap[e.month] || 0) + amt;
-            
-            // 年度累計
-            yearMap[e.year] = (yearMap[e.year] || 0) + amt;
-        });
-
-        // 渲染類別統計
-        document.getElementById('categorySummary').innerHTML = Object.entries(catMap)
-            .sort((a, b) => b[1] - a[1]) // 按金額由大到小排
-            .map(([k, v]) => `
-                <div class="summary-item">
-                    <span>${k}</span>
-                    <span class="sum-val">$${v.toLocaleString()}</span>
-                </div>`).join('') || '<div style="color:#999">無資料</div>';
-
-        // 渲染月份統計
-        document.getElementById('monthlySummary').innerHTML = Object.entries(monMap)
-            .sort().reverse().slice(0, 5)
-            .map(([k, v]) => `
-                <div class="summary-item">
-                    <span>${k}</span>
-                    <span class="sum-val">$${v.toLocaleString()}</span>
-                </div>`).join('') || '<div style="color:#999">無資料</div>';
-
-        // 渲染年度統計
-        document.getElementById('yearlySummary').innerHTML = Object.entries(yearMap)
-            .sort().reverse()
-            .map(([k, v]) => `
-                <div class="summary-item" style="color:var(--primary); font-weight:bold; border-bottom: 2px solid #eee;">
-                    <span>${k} 年度</span>
-                    <span class="sum-val">$${v.toLocaleString()}</span>
-                </div>`).join('') || '<div style="color:#999">無資料</div>';
+    function deleteItem(id) {
+        if (!confirm('確定刪除？')) return;
+        expenses = expenses.filter(i => i.id !== id);
+        saveAndRefresh();
     }
 
+    function saveAndRefresh() {
+        localStorage.setItem('expense_v5', JSON.stringify(expenses));
+        renderAll();
+    }
+
+    // 5. 修正後的匯入匯出功能
     function exportToCSV() {
-        if (expenses.length === 0) return alert('無資料可匯出');
-        let csv = "\uFEFF類別,項目名稱,應繳金額,繳款期限\n";
-        expenses.forEach(e => {
-            csv += `${e.category},${e.desc},${e.amount},${e.date}\n`;
+        if (expenses.length === 0) return alert('無資料');
+        let csv = "\uFEFF類別,項目名稱,金額,日期\n";
+        expenses.forEach(i => {
+            csv += `${i.category},${i.desc},${i.amount},${i.date}\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `支出備份_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `支出備份_${new Date().toLocaleDateString()}.csv`;
+        a.click();
     }
 
     function importCSV(event) {
@@ -332,44 +252,47 @@
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            const content = e.target.result;
-            const lines = content.split('\n');
-            const newRecords = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
+            const rows = e.target.result.split('\n');
+            const imported = [];
+            
+            for (let i = 1; i < rows.length; i++) {
+                const line = rows[i].replace('\r', '').trim(); // 移除 Excel 常見的 \r 換行符
                 if (!line) continue;
+                
                 const cols = line.split(',');
                 if (cols.length >= 4) {
-                    const amt = parseFloat(cols[2]); // 重點：匯入時立即轉為數字
-                    if (!isNaN(amt)) {
-                        newRecords.push({
-                            id: Date.now() + Math.random() + i,
-                            category: cols[0],
-                            desc: cols[1],
+                    const cat = cols[0].trim();
+                    const desc = cols[1].trim();
+                    const amt = Number(cols[2].replace(/[^\d.]/g, '')); // 移除可能存在的貨幣符號
+                    const date = cols[3].trim();
+
+                    if (!isNaN(amt) && date) {
+                        imported.push({
+                            id: Date.now() + Math.random(),
+                            category: cat,
+                            desc: desc,
                             amount: amt,
-                            date: cols[3],
-                            year: cols[3].substring(0, 4),
-                            month: cols[3].substring(0, 7)
+                            date: date,
+                            year: date.substring(0, 4),
+                            month: date.substring(0, 7)
                         });
                     }
                 }
             }
-
-            if (newRecords.length > 0) {
-                if (confirm(`讀取到 ${newRecords.length} 筆資料，是否合併？`)) {
-                    expenses = [...expenses, ...newRecords];
-                    saveData();
-                    renderAll();
+            if (imported.length > 0) {
+                if (confirm(`成功解析 ${imported.length} 筆資料，要覆蓋並取代目前的紀錄嗎？(按取消則為合併)`)) {
+                    expenses = imported;
+                } else {
+                    expenses = [...expenses, ...imported];
                 }
+                saveAndRefresh();
             } else {
-                alert('匯入格式不正確');
+                alert('匯入格式不正確，請確保 CSV 欄位為：類別,項目名稱,金額,日期');
             }
             event.target.value = '';
         };
         reader.readAsText(file);
     }
 </script>
-
 </body>
 </html>
