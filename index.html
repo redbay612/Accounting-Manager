@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業財務支出管理系統 - 支援匯入匯出</title>
+    <title>專業財務支出管理系統 - 修正版</title>
     <style>
         :root {
             --primary: #4338ca;
@@ -71,7 +71,6 @@
         .btn-import { background: var(--info); color: white; }
         .btn-clear { background: var(--secondary); color: white; font-size: 12px; margin-left: 10px; }
 
-        /* 工具列 */
         .toolbar {
             margin-bottom: 15px;
             display: flex;
@@ -107,8 +106,8 @@
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 25px; }
         .summary-box { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
         .summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; }
+        .sum-val { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
 
-        /* 隱藏的檔案輸入框 */
         #fileInput { display: none; }
 
         @media (max-width: 800px) {
@@ -120,9 +119,9 @@
 <body>
 
 <div class="container">
-    <h1>📊 專業支出管理系統</h1>
+    <h1>📊 專業支出管理系統 (修正版)</h1>
 
-    <!-- 1. 輸入區 -->
+    <!-- 輸入區 -->
     <div class="input-card">
         <select id="category">
             <option value="卡費">💳 卡費</option>
@@ -131,27 +130,24 @@
             <option value="生活費">🥗 生活費</option>
             <option value="其他">📦 其他</option>
         </select>
-        <input type="text" id="desc" placeholder="項目名稱 (如: 富邦銀行)">
+        <input type="text" id="desc" placeholder="項目名稱">
         <input type="number" id="amount" placeholder="金額">
         <input type="date" id="dueDate">
         <button class="btn-add" onclick="addItem()">新增紀錄</button>
     </div>
 
-    <!-- 2. 工具列 (搜尋與匯入匯出) -->
+    <!-- 工具列 -->
     <div class="toolbar">
-        <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋名稱或類別..." oninput="renderTable()">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋名稱或類別..." oninput="renderAll()">
         
         <div class="action-btns">
-            <!-- 匯入功能 -->
             <button class="btn-import" onclick="document.getElementById('fileInput').click()">📂 匯入備份</button>
             <input type="file" id="fileInput" accept=".csv" onchange="importCSV(event)">
-            
-            <!-- 匯出功能 -->
             <button class="btn-export" onclick="exportToCSV()">💾 匯出備份</button>
         </div>
     </div>
 
-    <!-- 3. 明細清單 -->
+    <!-- 清單表格 -->
     <div class="table-container">
         <h2>📝 支出明細 <button class="btn-clear" onclick="clearAllData()">全部清空</button></h2>
         <table>
@@ -168,14 +164,14 @@
         </table>
     </div>
 
-    <!-- 4. 統計報表 -->
+    <!-- 統計區 -->
     <div class="summary-grid">
         <div class="summary-box">
-            <h2>按類別累計</h2>
+            <h2>按類別累計 (總額)</h2>
             <div id="categorySummary"></div>
         </div>
         <div class="summary-box">
-            <h2>月度總計</h2>
+            <h2>月度總計 (最近五個月)</h2>
             <div id="monthlySummary"></div>
         </div>
         <div class="summary-box">
@@ -186,33 +182,44 @@
 </div>
 
 <script>
-    let expenses = JSON.parse(localStorage.getItem('my_expense_v3')) || [];
+    // 資料初始化，確保從 localStorage 取出的金額也是數字型態
+    let expenses = (JSON.parse(localStorage.getItem('my_expense_v4')) || []).map(item => ({
+        ...item,
+        amount: parseFloat(item.amount) || 0
+    }));
 
-    // --- 核心功能 ---
+    // 初始化渲染
+    renderAll();
+
+    function renderAll() {
+        renderTable();
+        renderSummaries();
+    }
 
     function addItem() {
         const category = document.getElementById('category').value;
         const desc = document.getElementById('desc').value;
-        const amount = document.getElementById('amount').value;
+        const amountVal = document.getElementById('amount').value;
         const dueDate = document.getElementById('dueDate').value;
 
-        if (!desc || !amount || !dueDate) {
-            alert('請填寫完整資訊');
+        if (!desc || !amountVal || !dueDate) {
+            alert('請完整填寫');
             return;
         }
 
         const item = {
-            id: Date.now() + Math.random(), // 確保唯一性
+            id: Date.now() + Math.random(),
             category,
             desc,
-            amount: parseFloat(amount),
+            amount: parseFloat(amountVal), // 強制轉為浮點數
             date: dueDate,
             year: dueDate.substring(0, 4),
             month: dueDate.substring(0, 7)
         };
 
         expenses.push(item);
-        saveAndRender();
+        saveData();
+        renderAll();
         document.getElementById('desc').value = '';
         document.getElementById('amount').value = '';
     }
@@ -220,91 +227,21 @@
     function deleteItem(id) {
         if(confirm('確定刪除？')) {
             expenses = expenses.filter(e => e.id !== id);
-            saveAndRender();
+            saveData();
+            renderAll();
         }
     }
 
     function clearAllData() {
         if(confirm('警告！這將刪除所有紀錄，確定嗎？')) {
             expenses = [];
-            saveAndRender();
+            saveData();
+            renderAll();
         }
     }
 
-    // --- 匯入/匯出功能 ---
-
-    function exportToCSV() {
-        if (expenses.length === 0) return alert('無資料可匯出');
-        
-        let csv = "\uFEFF類別,項目名稱,應繳金額,繳款期限,月份\n";
-        expenses.forEach(e => {
-            csv += `${e.category},${e.desc},${e.amount},${e.date},${e.month}\n`;
-        });
-
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `支出備份_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-    }
-
-    function importCSV(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            const lines = content.split('\n');
-            const newRecords = [];
-
-            // 從第二行開始讀取 (跳過標題)
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-
-                const cols = line.split(',');
-                if (cols.length >= 4) {
-                    const category = cols[0];
-                    const desc = cols[1];
-                    const amount = parseFloat(cols[2]);
-                    const date = cols[3];
-
-                    if (category && desc && !isNaN(amount) && date) {
-                        newRecords.push({
-                            id: Date.now() + Math.random() + i,
-                            category,
-                            desc,
-                            amount,
-                            date,
-                            year: date.substring(0, 4),
-                            month: date.substring(0, 7)
-                        });
-                    }
-                }
-            }
-
-            if (newRecords.length > 0) {
-                if (confirm(`偵測到 ${newRecords.length} 筆資料，要將其合併到現有紀錄中嗎？`)) {
-                    expenses = [...expenses, ...newRecords];
-                    saveAndRender();
-                    alert('匯入成功！');
-                }
-            } else {
-                alert('匯入失敗：檔案格式不正確或無資料');
-            }
-            // 清除 input 以便下次選擇同檔案還能觸發
-            event.target.value = '';
-        };
-        reader.readAsText(file);
-    }
-
-    // --- 渲染與計算 ---
-
-    function saveAndRender() {
-        localStorage.setItem('my_expense_v3', JSON.stringify(expenses));
-        renderTable();
-        renderSummaries();
+    function saveData() {
+        localStorage.setItem('my_expense_v4', JSON.stringify(expenses));
     }
 
     function renderTable() {
@@ -330,26 +267,108 @@
         });
     }
 
+    // 重點修正：統計邏輯
     function renderSummaries() {
         const catMap = {}, monMap = {}, yearMap = {};
+        
+        // 使用原始 expenses 陣列進行全局統計
         expenses.forEach(e => {
-            catMap[e.category] = (catMap[e.category] || 0) + e.amount;
-            monMap[e.month] = (monMap[e.month] || 0) + e.amount;
-            yearMap[e.year] = (yearMap[e.year] || 0) + e.amount;
+            const amt = parseFloat(e.amount) || 0; // 再次確保參與加總的是數字
+            
+            // 類別累計
+            catMap[e.category] = (catMap[e.category] || 0) + amt;
+            
+            // 月份累計
+            monMap[e.month] = (monMap[e.month] || 0) + amt;
+            
+            // 年度累計
+            yearMap[e.year] = (yearMap[e.year] || 0) + amt;
         });
 
-        document.getElementById('categorySummary').innerHTML = Object.entries(catMap).map(([k, v]) => 
-            `<div class="summary-item"><span>${k}</span><b>$${v.toLocaleString()}</b></div>`).join('') || '無';
+        // 渲染類別統計
+        document.getElementById('categorySummary').innerHTML = Object.entries(catMap)
+            .sort((a, b) => b[1] - a[1]) // 按金額由大到小排
+            .map(([k, v]) => `
+                <div class="summary-item">
+                    <span>${k}</span>
+                    <span class="sum-val">$${v.toLocaleString()}</span>
+                </div>`).join('') || '<div style="color:#999">無資料</div>';
 
-        document.getElementById('monthlySummary').innerHTML = Object.entries(monMap).sort().reverse().slice(0, 5).map(([k, v]) => 
-            `<div class="summary-item"><span>${k}</span><b>$${v.toLocaleString()}</b></div>`).join('') || '無';
+        // 渲染月份統計
+        document.getElementById('monthlySummary').innerHTML = Object.entries(monMap)
+            .sort().reverse().slice(0, 5)
+            .map(([k, v]) => `
+                <div class="summary-item">
+                    <span>${k}</span>
+                    <span class="sum-val">$${v.toLocaleString()}</span>
+                </div>`).join('') || '<div style="color:#999">無資料</div>';
 
-        document.getElementById('yearlySummary').innerHTML = Object.entries(yearMap).sort().reverse().map(([k, v]) => 
-            `<div class="summary-item" style="color:var(--primary); font-weight:bold;"><span>${k}年度</span><span>$${v.toLocaleString()}</span></div>`).join('') || '無';
+        // 渲染年度統計
+        document.getElementById('yearlySummary').innerHTML = Object.entries(yearMap)
+            .sort().reverse()
+            .map(([k, v]) => `
+                <div class="summary-item" style="color:var(--primary); font-weight:bold; border-bottom: 2px solid #eee;">
+                    <span>${k} 年度</span>
+                    <span class="sum-val">$${v.toLocaleString()}</span>
+                </div>`).join('') || '<div style="color:#999">無資料</div>';
     }
 
-    // 初始啟動
-    saveAndRender();
+    function exportToCSV() {
+        if (expenses.length === 0) return alert('無資料可匯出');
+        let csv = "\uFEFF類別,項目名稱,應繳金額,繳款期限\n";
+        expenses.forEach(e => {
+            csv += `${e.category},${e.desc},${e.amount},${e.date}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `支出備份_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+    }
+
+    function importCSV(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            const lines = content.split('\n');
+            const newRecords = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const cols = line.split(',');
+                if (cols.length >= 4) {
+                    const amt = parseFloat(cols[2]); // 重點：匯入時立即轉為數字
+                    if (!isNaN(amt)) {
+                        newRecords.push({
+                            id: Date.now() + Math.random() + i,
+                            category: cols[0],
+                            desc: cols[1],
+                            amount: amt,
+                            date: cols[3],
+                            year: cols[3].substring(0, 4),
+                            month: cols[3].substring(0, 7)
+                        });
+                    }
+                }
+            }
+
+            if (newRecords.length > 0) {
+                if (confirm(`讀取到 ${newRecords.length} 筆資料，是否合併？`)) {
+                    expenses = [...expenses, ...newRecords];
+                    saveData();
+                    renderAll();
+                }
+            } else {
+                alert('匯入格式不正確');
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
 </script>
 
 </body>
