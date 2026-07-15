@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>支出紀錄管理系統 - 修正編輯版</title>
+    <title>支出管理系統 - 精確歸類版</title>
     <style>
-        :root { --primary: #4338ca; --success: #059669; --danger: #dc2626; --bg: #f1f5f9; }
+        :root { --primary: #4338ca; --success: #059669; --danger: #dc2626; --bg: #f3f4f6; }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); padding: 20px; color: #1e293b; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--primary); }
+        h1 { text-align: center; color: var(--primary); margin-bottom: 25px; }
         
-        /* 輸入與工具列 */
+        /* 輸入區 */
         .input-card { background: #fff; padding: 20px; border-radius: 8px; display: grid; grid-template-columns: 1.5fr 1fr 1fr auto; gap: 10px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
+        input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box; }
         
-        button { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; }
+        button { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-add { background: var(--primary); color: white; }
         .btn-export { background: var(--success); color: white; }
         .btn-import { background: #0ea5e9; color: white; }
@@ -39,9 +39,8 @@
         .total-val { color: var(--primary); font-size: 1.2rem; }
 
         /* 編輯彈窗 */
-        #editModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        #editModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: white; padding: 30px; border-radius: 12px; width: 400px; box-shadow: 0 20px 25px rgba(0,0,0,0.2); }
-        .modal-content h3 { margin-top: 0; }
         .modal-content input { display: block; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
         
         #fileInput { display: none; }
@@ -50,34 +49,34 @@
 <body>
 
 <div class="container">
-    <h1>📅 支出管理系統 (修正編輯版)</h1>
+    <h1>📊 支出管理 (房貸統整與金額修正版)</h1>
 
-    <!-- 輸入區 -->
+    <!-- 1. 新增輸入區 -->
     <div class="input-card">
-        <input type="text" id="category" placeholder="類別 (如: 星展卡費)">
-        <input type="number" id="amount" placeholder="金額">
+        <input type="text" id="category" placeholder="類別 (如: 星展卡費、房貸)">
+        <input type="number" id="amount" placeholder="支付金額">
         <input type="date" id="dueDate">
-        <button class="btn-add" onclick="addItem()">新增</button>
+        <button class="btn-add" onclick="addItem()">新增紀錄</button>
     </div>
 
-    <!-- 工具列 -->
+    <!-- 2. 工具列 -->
     <div class="toolbar">
-        <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋類別或日期..." oninput="renderAll()">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋類別或月份..." oninput="renderAll()">
         <div style="display: flex; gap: 8px;">
-            <button class="btn-import" onclick="document.getElementById('fileInput').click()">📂 匯入</button>
+            <button class="btn-import" onclick="document.getElementById('fileInput').click()">📂 匯入 CSV</button>
             <input type="file" id="fileInput" accept=".csv" onchange="importCSV(event)">
-            <button class="btn-export" onclick="exportToCSV()">💾 匯出</button>
+            <button class="btn-export" onclick="exportToCSV()">💾 匯出 CSV</button>
         </div>
     </div>
 
-    <!-- 表格 -->
+    <!-- 3. 明細清單 -->
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>支出類別</th>
+                    <th>支出品項</th>
                     <th style="text-align: right;">支付金額</th>
-                    <th>日期</th>
+                    <th>付費日期</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -85,10 +84,10 @@
         </table>
     </div>
 
-    <!-- 統計 -->
+    <!-- 4. 統計區 -->
     <div class="summary-grid">
         <div class="summary-box">
-            <h3>📂 分類統計</h3>
+            <h3>📂 分類累計 (房貸已統整)</h3>
             <div id="categorySummary"></div>
             <div id="grandTotal" class="summary-item" style="border-top:2px solid #4338ca; margin-top:10px;"></div>
         </div>
@@ -99,25 +98,41 @@
     </div>
 </div>
 
-<!-- 編輯視窗 -->
+<!-- 編輯彈出視窗 -->
 <div id="editModal">
     <div class="modal-content">
-        <h3>✏️ 編輯紀錄</h3>
-        <label>類別：</label><input type="text" id="editCat">
-        <label>金額：</label><input type="number" id="editAmt">
+        <h3>✏️ 編輯支出紀錄</h3>
+        <label>品項類別：</label><input type="text" id="editCat">
+        <label>支付金額：</label><input type="number" id="editAmt">
         <label>日期：</label><input type="date" id="editDate">
         <input type="hidden" id="editId">
         <div style="display: flex; gap: 10px;">
-            <button class="btn-add" style="flex:1" onclick="saveEdit()">儲存修改</button>
+            <button class="btn-add" style="flex:1" onclick="saveEdit()">儲存</button>
             <button class="btn-del" style="flex:1; background:#94a3b8" onclick="closeModal()">取消</button>
         </div>
     </div>
 </div>
 
 <script>
-    let expenses = (JSON.parse(localStorage.getItem('expense_v11')) || []);
+    // 初始資料載入與智慧歸類
+    let expenses = (JSON.parse(localStorage.getItem('expense_v12')) || []).map(i => cleanItem(i));
 
     renderAll();
+
+    // 關鍵功能：智慧清洗與歸類
+    function cleanItem(item) {
+        let cat = String(item.category || "").trim();
+        // 如果包含「房貸」關鍵字，統一命名為「房貸」
+        if (cat.includes("房貸")) {
+            cat = "房貸";
+        }
+        return {
+            id: item.id || Date.now() + Math.random(),
+            category: cat,
+            amount: Number(item.amount) || 0,
+            date: item.date || ""
+        };
+    }
 
     function renderAll() {
         renderTable();
@@ -126,25 +141,25 @@
 
     // 新增
     function addItem() {
-        const cat = document.getElementById('category').value.trim();
+        const cat = document.getElementById('category').value;
         const amt = document.getElementById('amount').value;
         const date = document.getElementById('dueDate').value;
 
         if (!cat || !amt || !date) return alert('請完整填寫');
 
-        expenses.push({
-            id: Date.now(),
+        const newItem = cleanItem({
             category: cat,
-            amount: Number(amt),
+            amount: amt,
             date: date
         });
 
+        expenses.push(newItem);
         saveAndRefresh();
         document.getElementById('category').value = '';
         document.getElementById('amount').value = '';
     }
 
-    // 渲染表格
+    // 繪製表格
     function renderTable() {
         const tbody = document.getElementById('expenseList');
         const search = document.getElementById('searchInput').value.toLowerCase();
@@ -158,7 +173,7 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><b>${item.category}</b></td>
-                <td style="text-align: right; font-weight: bold; color: var(--primary);">$${Number(item.amount).toLocaleString()}</td>
+                <td style="text-align: right; font-weight: bold; color: var(--primary);">$${item.amount.toLocaleString()}</td>
                 <td>${item.date}</td>
                 <td>
                     <button class="btn-edit" onclick="openEdit(${item.id})">編輯</button>
@@ -169,7 +184,7 @@
         });
     }
 
-    // 統計
+    // 統計邏輯
     function renderSummaries() {
         const catMap = {}, monMap = {};
         let total = 0;
@@ -192,7 +207,7 @@
         `).join('') || '無資料';
     }
 
-    // 編輯功能
+    // 編輯視窗邏輯
     function openEdit(id) {
         const item = expenses.find(i => i.id === id);
         document.getElementById('editCat').value = item.category;
@@ -204,11 +219,15 @@
 
     function saveEdit() {
         const id = Number(document.getElementById('editId').value);
-        const item = expenses.find(i => i.id === id);
-        item.category = document.getElementById('editCat').value;
-        item.amount = Number(document.getElementById('editAmt').value);
-        item.date = document.getElementById('editDate').value;
+        const index = expenses.findIndex(i => i.id === id);
         
+        const updated = cleanItem({
+            category: document.getElementById('editCat').value,
+            amount: document.getElementById('editAmt').value,
+            date: document.getElementById('editDate').value
+        });
+        
+        expenses[index] = { ...updated, id: id };
         saveAndRefresh();
         closeModal();
     }
@@ -219,10 +238,10 @@
         if(confirm('確定刪除？')) { expenses = expenses.filter(i => i.id !== id); saveAndRefresh(); }
     }
 
-    function saveAndRefresh() { localStorage.setItem('expense_v11', JSON.stringify(expenses)); renderAll(); }
+    function saveAndRefresh() { localStorage.setItem('expense_v12', JSON.stringify(expenses)); renderAll(); }
 
     function exportToCSV() {
-        let csv = "\uFEFF類別,支付金額,日期\n";
+        let csv = "\uFEFF支出類別,支付金額,付費日期\n";
         expenses.forEach(i => csv += `${i.category},${i.amount},${i.date}\n`);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement('a');
@@ -231,7 +250,7 @@
         a.click();
     }
 
-    // 核心修正：匯入辨識邏輯 (排除日期當金額)
+    // 重點修正：匯入邏輯
     function importCSV(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -243,42 +262,40 @@
             for (let i = 1; i < rows.length; i++) {
                 const line = rows[i].trim();
                 if (!line) continue;
+                // 分割欄位
                 const cols = line.split(',').map(c => c.trim().replace(/"/g, ''));
                 
-                let detectedDate = "";
-                let detectedAmount = NaN;
-                let detectedCategory = "";
+                let dDate = "", dAmt = NaN, dCat = "";
 
                 cols.forEach(col => {
-                    // 1. 強力日期辨識：必須包含 - 或 /，且長度足夠
-                    if (/\d{4}[-/]\d{1,2}/.test(col)) {
-                        detectedDate = col.replace(/\//g, '-');
+                    // 1. 如果包含 '-' 且長度大於等於 7 -> 日期 (如 2026-07)
+                    if (col.includes('-') && col.length >= 7) {
+                        dDate = col;
                     } 
-                    // 2. 金額辨識：純數字，且「絕不包含」橫線
+                    // 2. 如果是純數字且不含橫線 -> 金額 (如 15000)
                     else if (!isNaN(parseFloat(col.replace(/[$,]/g, ''))) && !col.includes('-')) {
-                        detectedAmount = parseFloat(col.replace(/[$,]/g, ''));
+                        dAmt = parseFloat(col.replace(/[$,]/g, ''));
                     }
-                    // 3. 類別辨識：剩下的純文字
+                    // 3. 剩下的文字 -> 類別
                     else if (col.length > 0) {
-                        detectedCategory = col;
+                        dCat = col;
                     }
                 });
 
-                if (!isNaN(detectedAmount) && detectedDate) {
-                    imported.push({
-                        id: Date.now() + Math.random() + i,
-                        category: detectedCategory || "未分類",
-                        amount: detectedAmount,
-                        date: detectedDate
-                    });
+                if (!isNaN(dAmt) && dDate) {
+                    imported.push(cleanItem({
+                        category: dCat || "未分類",
+                        amount: dAmt,
+                        date: dDate
+                    }));
                 }
             }
             if (imported.length > 0) {
-                if(confirm(`成功讀取 ${imported.length} 筆資料！`)) {
+                if(confirm(`成功匯入 ${imported.length} 筆資料！`)) {
                     expenses = [...expenses, ...imported];
                     saveAndRefresh();
                 }
-            } else { alert('無法辨識，請確保 CSV 包含正確日期格式與金額'); }
+            } else { alert('無法解析，請確保 CSV 包含金額與日期格式 (YYYY-MM)'); }
             event.target.value = '';
         };
         reader.readAsText(file);
